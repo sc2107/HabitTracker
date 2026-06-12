@@ -1,6 +1,6 @@
-# [Project name]
+# Habit Tracker
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A mobile-first full-stack habit tracking web app. Users register, log daily habits, track streaks, view 30-day history, and see a progress dashboard.
 
 ## Run & Operate
 
@@ -9,28 +9,41 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required env: `DATABASE_URL` — Postgres connection string, `SESSION_SECRET` — session signing secret
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
+- API: Express 5 + express-session (cookie auth)
 - DB: PostgreSQL + Drizzle ORM
+- Auth: bcryptjs password hashing + express-session
 - Validation: Zod (`zod/v4`), `drizzle-zod`
 - API codegen: Orval (from OpenAPI spec)
+- Frontend: React + Vite + Tailwind CSS + shadcn/ui, wouter routing
 - Build: esbuild (CJS bundle)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `lib/api-spec/openapi.yaml` — OpenAPI contract (source of truth)
+- `lib/db/src/schema/` — Drizzle schema: users.ts, habits.ts, habitEntries.ts
+- `artifacts/api-server/src/routes/` — auth.ts, habits.ts, tracking.ts, dashboard.ts
+- `artifacts/api-server/src/lib/habitUtils.ts` — streak calculation logic
+- `artifacts/habit-tracker/src/` — React frontend
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Cookie-based sessions (express-session) instead of JWT — simpler, no client-side token management
+- bcryptjs (pure JS) instead of native bcrypt — avoids native build script issues in Replit
+- Streak computed at query time from habit_entries — no denormalized streak column to keep in sync
+- Unique constraint on (habit_id, completed_date) enforces one entry per habit per day at DB level
+- Toggle completion: if entry exists → delete it (uncomplete), else insert it
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- **Today tab**: All habits as cards, tap to toggle today's completion, streak badge per habit, FAB to add habits
+- **History tab**: Select a habit, view a 30-day dot grid of completed days
+- **Dashboard tab**: Completion ratio today, weekly count, per-habit streaks, weekly bar chart
+- **Auth**: Register (name/email/password min 8 chars), Login, Logout — generic error messages
 
 ## User preferences
 
@@ -38,8 +51,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- After any OpenAPI spec change: run `pnpm --filter @workspace/api-spec run codegen` before touching backend or frontend
+- `pnpm --filter @workspace/db run push` to apply DB schema changes in dev
+- SESSION_SECRET must be set in environment secrets for sessions to work
+- Streak logic: computed by walking backwards from today — see `habitUtils.ts`

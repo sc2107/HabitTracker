@@ -1,0 +1,133 @@
+Build and deploy a complete, mobile-first full-stack Habit Tracker web application with the following stack, features, and design system. Build it end-to-end: frontend, backend, database, and deployment.
+
+Tech Stack
+
+
+Frontend: React + Tailwind CSS (single-page app)
+Backend: Node.js + Express (REST API)
+Database: PostgreSQL
+
+
+Core Features
+
+1. User Management
+
+
+Register with name, email, and password. Reject duplicate emails. Enforce a minimum 8-character password. Hash passwords with bcrypt before storing.
+Login with email + password. Return a session token (JWT or express-session). Invalid credentials must return a generic error ("Invalid email or password") without revealing which field was wrong.
+Logout that clears the session.
+All habit and tracking routes must be protected — users can only see and modify their own data.
+
+
+2. Habit Management
+
+
+Create habit: title (required), description (optional). Show an inline form or bottom sheet — creating a habit should take under 10 seconds.
+Edit habit: update title/description.
+Delete habit: require a confirmation dialog before deleting.
+View habits: the home screen lists all of the user's habits as cards, each showing the title, today's completion status, and the current streak.
+
+
+3. Tracking
+
+
+Mark complete: one tap on a habit card toggles today's completion. Tapping again un-marks it. Prevent duplicate entries for the same habit on the same date (unique constraint on habit_id + completed_date).
+Completion history: per habit, show a simple calendar or last-30-days dot grid of completed days.
+Progress dashboard: show (a) habits completed today vs. total, (b) completions this week, (c) current streak per habit, (d) a simple weekly bar chart of total completions.
+
+
+Database Schema
+
+users:          id (PK), name, email (unique), password (hashed), created_at
+habits:         id (PK), user_id (FK → users), title, description, created_at
+habit_entries:  id (PK), habit_id (FK → habits), completed_date (date),
+                UNIQUE (habit_id, completed_date)
+
+API Endpoints
+
+POST   /api/register        → create account
+POST   /api/login           → authenticate, return token/session
+POST   /api/logout          → end session
+GET    /api/habits          → list current user's habits (with today's status + streak)
+POST   /api/habits          → create habit
+PUT    /api/habits/:id      → edit habit (own habits only)
+DELETE /api/habits/:id      → delete habit (own habits only, cascades entries)
+POST   /api/complete        → toggle completion { habit_id, date }
+GET    /api/history/:habitId → completion history for one habit
+GET    /api/dashboard       → aggregate stats for dashboard
+
+All endpoints must validate input server-side, return meaningful HTTP status codes (400 validation, 401 unauthenticated, 403 not owner, 404 not found), and return JSON error messages the frontend can display.
+
+Design System — follow this exactly
+
+The app must be mobile-first: design for a 375px-wide viewport first, then let layouts expand gracefully on tablet/desktop (max content width 640px, centered).
+
+Consistent spacing
+
+
+Use an 8px spacing scale only: 4, 8, 16, 24, 32, 48 (Tailwind: p-1, p-2, p-4, p-6, p-8, p-12). Never use arbitrary values.
+Screen padding: 16px horizontal on mobile (px-4).
+Cards: 16px internal padding, 12px gap between stacked cards.
+Vertical rhythm: 24px between major sections, 8px between a label and its input.
+
+
+Typography
+
+
+One font family: Inter (Google Fonts), system-ui fallback.
+A 4-level type scale only:
+
+Page title: 24px / bold (text-2xl font-bold)
+Section heading: 18px / semibold (text-lg font-semibold)
+Body: 16px / regular (text-base) — never smaller for primary content
+Caption/meta: 13px / medium, muted color (text-[13px] is the only exception; otherwise text-sm)
+
+
+
+Line height 1.5 for body text. No more than 2 font weights per screen.
+
+
+Color hierarchy
+
+
+One primary accent: indigo-600 (#4F46E5) — used ONLY for primary actions (Add Habit button, mark-complete state) and active navigation.
+Success: emerald-500 for completed states and streak indicators.
+Danger: red-600 reserved exclusively for delete actions.
+Neutrals carry the layout: background gray-50, cards white with gray-200 border, primary text gray-900, secondary text gray-500.
+Every text/background pair must meet WCAG AA contrast (4.5:1).
+
+
+Simple user flows
+
+
+3 screens max behind a bottom tab bar: Today (habit list), History, Dashboard. Plus auth screens.
+New-user flow: Register → empty state with a friendly illustration/message and one clear "Add your first habit" button → inline create form → back to list. No multi-step wizards.
+Mark-complete is a single tap on the habit card itself — no menus, no detail page required for the core action.
+Every screen answers one question: Today = "what do I do now?", History = "how have I done?", Dashboard = "am I improving?"
+
+
+Intuitive interactions
+
+
+Touch targets minimum 44×44px.
+Primary action ("+ Add Habit") is a floating action button, bottom-right, always reachable by thumb.
+Immediate feedback: optimistic UI on completion toggle (checkmark animates instantly, then syncs), subtle scale/press animation on tap (active:scale-95).
+Loading: skeleton placeholders, not spinners, for lists.
+Errors: inline toast messages in plain language ("Couldn't save — check your connection"), never raw error codes.
+Destructive actions (delete habit) always get a confirmation dialog stating what will be lost ("This deletes the habit and its history").
+Empty states always include the next action, never a blank screen.
+
+
+Deployment
+
+Deploy publicly on Replit. Provision the PostgreSQL database, run schema migrations automatically on startup, and confirm the live URL works on a phone-sized viewport.
+
+Acceptance checklist (verify before finishing)
+
+
+I can register, log out, and log back in.
+I cannot see another user's habits.
+Creating a habit takes under 10 seconds.
+Tapping a habit toggles today's completion with instant visual feedback.
+Streaks and dashboard numbers are correct after multiple days of test data.
+The whole app is usable one-handed on a 375px screen.
